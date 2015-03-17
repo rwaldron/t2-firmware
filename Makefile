@@ -35,4 +35,7 @@ $(foreach t,$(TARGETS),$(eval $(call each_target,$(t))))
 clean:
 	@-rm -rf $(BUILD)
 
+update:
+	@echo $(shell git submodule update --init --recursive)
+
 print-%	: ; @echo $* = $($*)

@@ -23,6 +23,7 @@ typedef enum PortCmd {
     CMD_GPIO_RAW_READ = 23, // reads pin state, does not switch between input/output
     CMD_ANALOG_READ = 24,
     CMD_ANALOG_WRITE = 25,
+    CMD_GPIO_PORT_STATE = 26, // Read the value of each pin and report as a single 8 bit uint
     CMD_ENABLE_SPI = 10,
     CMD_DISABLE_SPI = 11,
     CMD_ENABLE_I2C = 12,
@@ -140,6 +141,7 @@ int port_cmd_args(PortCmd cmd) {
         case CMD_DISABLE_SPI:
         case CMD_DISABLE_I2C:
         case CMD_DISABLE_UART:
+        case CMD_GPIO_PORT_STATE:
         case CMD_STOP:
             return 0;
 
@@ -279,6 +281,19 @@ ExecStatus port_begin_cmd(PortData *p) {
 
         case CMD_GPIO_RAW_READ:
             port_send_status(p, pin_read(port_selected_pin(p)) ? REPLY_HIGH : REPLY_LOW);
+            return EXEC_DONE;
+
+        case CMD_GPIO_PORT_STATE:
+            u8 state = 0;
+
+            for (int i = 0; i < 8; i++) {
+                // TODO: Check for enabled I2C, UART or SPI
+                if (p->port->gpio[i]) {
+                    state |= 1 << i;
+                }
+            }
+
+            port_send_status(p, state);
             return EXEC_DONE;
 
         case CMD_GPIO_HIGH:
